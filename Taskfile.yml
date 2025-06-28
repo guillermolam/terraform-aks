@@ -1,0 +1,52 @@
+# Taskfile for linting and formatting Terraform and Calling Github Actions
+version: '3'
+tasks:
+  lint:
+    desc: "Run linters on Terraform files"
+    cmds:
+      - tflint --config .tflint.hcl
+      - tfsec --config .tfsec.hcl
+      - trunk check --config .trunk.yml
+      - snyk iac test --config .snyk-iac.yml
+      - semgrep --config .semgrep.yml
+      - terrascan scan
+      - terramate validate
+
+  format:
+    desc: "Format Terraform files"
+    cmds:
+      - trunk fmt
+      - terraform fmt -recursive --check
+      - terraform fmt -check
+      - terramate fmt
+
+  validate:
+    desc: "Validate Terraform files"
+    cmds:
+      - terraform init -upgrade -reconfigure
+      - terraform plan -out=tfplan
+      - terraform validate -json
+      - terraform test -test-directory=tests/e2e -parallelism=3
+      - terraform test -filter='tests/*.tftest.hcl'
+      - terraform providers
+      - terraform state
+      - terraform show -json > tfstate.json
+      - terraform state list -json > tfstate_list.json
+
+  plan:
+    desc: "Generate Terraform plan"
+    cmds:
+      - terraform plan
+      - terraform show -json tfplan > tfplan.json
+      - terraform graph -draw-cycles
+      - terraform graph | dot -Tsvg > graph.svg
+      - terraform providers schema azure > azure_schema.json
+      - terraform graph -type=plan ## graph only resources in the planned changes  
+      - terraform graph -draw-cycles ## include cycle edges in the graph output  
+
+
+
+  apply:
+    desc: "Apply Terraform changes"
+    cmds:
+      - terraform apply -auto-approve

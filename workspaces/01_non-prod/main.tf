@@ -1,4 +1,4 @@
-# Dev environment AKS cluster configuration
+# Non-prod environment AKS cluster configuration
 
 provider "azurerm" {
   features {}
@@ -8,7 +8,7 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Variables for the dev environment
+# Variables for the non-prod environment
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
@@ -36,20 +36,20 @@ variable "location" {
   default     = "switzerlandnorth"
 }
 
-# Dev environment specific variables
+# Non-prod environment specific variables
 locals {
-  environment         = "dev"
+  environment         = "non-prod"
   name                = "aks-${local.environment}"
   resource_group_name = "rg-${local.name}"
-  vnet_address_space  = "10.0.0.0/16"
+  vnet_name           = "vnet-${local.name}"
+  address_space       = ["10.0.0.0/16"]
   subnets             = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24"]
   agent_count         = 2
   agent_vm_size       = "Standard_D2s_v3"
-  kubernetes_version  = "1.26.0"
-  dns_service_ip      = "10.0.0.10"
-  service_cidr        = "10.0.0.0/16"
-  docker_bridge_cidr  = "172.17.0.1/16"
-  availability_zones  = [1, 2, 3]
+  agent_min_count     = 2
+  agent_max_count     = 4
+  agent_max_pods      = 110
+  agent_os_disk_size_gb = 30
 }
 
 # Network module
@@ -66,7 +66,14 @@ module "network" {
   agent_vm_size       = local.agent_vm_size
   agent_count         = local.agent_count
   subnets             = local.subnets
-
+  vnet_name           = local.vnet_name
+  address_space       = local.address_space
+  subnet_configs      = [
+    { name = "public-subnet-1", prefix = "10.0.1.0/24", service_endpoints = [], service_endpoint_policy_ids = [], default_outbound_access = true, delegations = [] },
+    { name = "public-subnet-2", prefix = "10.0.2.0/24", service_endpoints = [], service_endpoint_policy_ids = [], default_outbound_access = true, delegations = [] },
+    { name = "private-subnet-1", prefix = "10.0.3.0/24", service_endpoints = [], service_endpoint_policy_ids = [], default_outbound_access = true, delegations = [] },
+    { name = "private-subnet-2", prefix = "10.0.4.0/24", service_endpoints = [], service_endpoint_policy_ids = [], default_outbound_access = true, delegations = [] }
+  ]
 }
 
 # IAM module
@@ -82,9 +89,43 @@ module "iam" {
 # AKS module
 module "aks" {
   source = "../../modules/03. aks"
-  agent_count         = local.agent_count
+
+  aks_cluster_name    = local.name
+  location            = var.location
+  resource_group_name = local.resource_group_name
   agent_vm_size       = local.agent_vm_size
-  subnets = module.network.subnets 
+  agent_count         = local.agent_count
+  vnet_subnet_id      = module.network.subnets[0].id
+  agent_min_count     = local.agent_min_count
+  agent_max_count     = local.agent_max_count
+  agent_max_pods      = local.agent_max_pods
+  agent_os_disk_size_gb = local.agent_os_disk_size_gb
+  agent_subnet_id     = module.network.subnets[0].id
+  kubeconfig_path     = "~/.kube/config"
+  log_analytics_workspace_id = ""
+  ingress_name        = "aks-ingress"
+  ingress_hosts       = ["aks-non-prod.example.com"]
+  tls_secret_name     = "aks-tls-secret"
+  service_name        = "aks-service"
+  acme_email          = "admin@example.com"
+  auto_scaler_profile_balance_similar_node_groups = false
+  auto_scaler_profile_empty_bulk_delete_max = 10
+  auto_scaler_profile_expander = "random"
+  auto_scaler_profile_max_graceful_termination_sec = 600
+  auto_scaler_profile_max_node_provisioning_time = "15m"
+  auto_scaler_profile_max_unready_nodes = 3
+  auto_scaler_profile_max_unready_percentage = 45
+  auto_scaler_profile_new_pod_scale_up_delay = 0
+  auto_scaler_profile_scale_down_delay_after_add = "10m"
+  auto_scaler_profile_scale_down_delay_after_delete = "20s"
+  auto_scaler_profile_scale_down_delay_after_failure = "3m"
+  auto_scaler_profile_scale_down_unneeded = true
+  auto_scaler_profile_scale_down_unready = true
+  auto_scaler_profile_scale_down_utilization_threshold = 0.5
+  auto_scaler_profile_scan_interval = "10s"
+  auto_scaler_profile_skip_nodes_with_local_storage = false
+  auto_scaler_profile_skip_nodes_with_system_pods = true
+
   depends_on = [
     module.network,
     module.iam
