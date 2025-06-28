@@ -1,24 +1,31 @@
-resource "azurerm_subnet" "aks" {
-  count                = length(var.subnets)
-  name                 = var.subnet_names[count.index]
-  resource_group_name  = azurerm_resource_group.aks.name
-  virtual_network_name = azurerm_virtual_network.aks.name
-  address_prefixes     = [var.subnets[count.index]]
+resource "azurerm_subnet" "this" {
+  for_each             = { for s in var.subnet_configs : s.name => s }
+  name                 = each.key
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = [each.value.prefix]
 
-  service_endpoints = [
-    "Microsoft.ContainerRegistry",
-    "Microsoft.KeyVault"
-  ]
+  service_endpoints                      = lookup(each.value, "service_endpoints", [])
+  service_endpoint_policy_ids            = lookup(each.value, "service_endpoint_policy_ids", [])
+  default_outbound_access_enabled        = lookup(each.value, "default_outbound_access", true)
 
-  delegation {
-    name = "aks-delegation"
-    service_delegation {
-      name    = "Microsoft.ContainerService/managedClusters"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+  dynamic "delegation" {
+    for_each = lookup(each.value, "delegations", [])
+    content {
+      name = delegation.value.name
+      dynamic "service_delegation" {
+        for_each = delegation.value.service_delegations
+        content {
+          name    = service_delegation.value.name
+          actions = service_delegation.value.actions
+        }
+      }
     }
   }
+}
 
-  # Enable network policies for enhanced security
-  enforce_private_link_endpoint_network_policies = true
-  enforce_private_link_service_network_policies  = true
+resource "azurerm_subnet_network_security_group_association" "assoc" {
+  for_each                  = azurerm_subnet.this
+  subnet_id                 = each.value.id
+  network_security_group_id = azurerm_network_security_group.nsg[each.key].id
 }

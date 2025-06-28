@@ -66,7 +66,7 @@ module "network" {
   agent_vm_size       = local.agent_vm_size
   agent_count         = local.agent_count
   subnets             = local.subnets
-  vnet_address_space  = local.vnet_address_space
+
 }
 
 # IAM module
@@ -82,18 +82,13 @@ module "iam" {
 # AKS module
 module "aks" {
   source = "../../modules/03. aks"
-
-  name                = local.name
-  location            = var.location
-  resource_group_name = local.resource_group_name
-  kubernetes_version  = local.kubernetes_version
   agent_count         = local.agent_count
   agent_vm_size       = local.agent_vm_size
-  node_subnet_id      = module.network.subnet_ids[0]
-  dns_service_ip      = local.dns_service_ip
-  service_cidr        = local.service_cidr
-  docker_bridge_cidr  = local.docker_bridge_cidr
-  availability_zones  = local.availability_zones
+  subnets = module.network.subnets 
+  depends_on = [
+    module.network,
+    module.iam
+  ]
 }
 
 # Outputs
