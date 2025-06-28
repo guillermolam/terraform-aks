@@ -1,27 +1,66 @@
-provider "azurerm" {
-  features {}
-  # Updated to align with Terraform provider version 4.34.0 for Azure Arc Kubernetes
+# Configuration for on-premises Kubernetes cluster with Rancher Desktop
+provider "kubernetes" {
+  config_path    = var.kube_config_path
+  config_context = var.kube_config_context
 }
 
-module "arc_aks" {
-  source = "../../modules/04. arc_aks"
-
-  cluster_name                 = var.cluster_name
-  location                     = var.location
-  resource_group_name          = var.resource_group_name
-  kubernetes_version           = var.kubernetes_version
-  agent_public_key_certificate = var.agent_public_key_certificate
-  kube_config                  = var.kube_config
-  kube_config_context          = var.kube_config_context
-  tags                         = var.tags
+provider "helm" {
+  kubernetes = {
+    config_path    = var.kube_config_path
+    config_context = var.kube_config_context
+  }
 }
 
-output "arc_cluster_name" {
-  description = "Name of the Arc-enabled Kubernetes cluster"
-  value       = module.arc_aks.arc_cluster_name
+# Deploy necessary resources for on-premises Kubernetes
+resource "kubernetes_namespace" "test_namespace" {
+  metadata {
+    name = "test-namespace"
+  }
 }
 
-output "arc_provisioned_id" {
-  description = "ID of the provisioned Arc Kubernetes cluster resource"
-  value       = module.arc_aks.arc_provisioned_id
+resource "helm_release" "nginx_ingress" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  version    = "4.11.3"
+  namespace  = "ingress-nginx"
+  create_namespace = true
+
+  set = [
+    {
+      name  = "controller.publishService.enabled"
+      value = "true"
+    }
+  ]
+}
+
+resource "helm_release" "cert_manager" {
+  name       = "cert-manager"
+  repository = "https://charts.jetstack.io"
+  chart      = "cert-manager"
+  version    = "v1.12.0"
+  namespace  = "cert-manager"
+  create_namespace = true
+
+  set = [
+    {
+      name  = "installCRDs"
+      value = "true"
+    }
+  ]
+}
+
+output "namespace_created" {
+  description = "Name of the created namespace"
+  value       = kubernetes_namespace.test_namespace.metadata[0].name
+}
+
+output "nginx_ingress_status" {
+  description = "Status of NGINX Ingress Controller deployment"
+  value       = helm_release.nginx_ingress.status
+}
+
+output "cert_manager_status" {
+  description = "Status of Cert-Manager deployment"
+  value       = helm_release.cert_manager.status
 }

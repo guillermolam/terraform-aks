@@ -1,15 +1,24 @@
-# Snyk policy file to exclude directories/files from import and CLI tests
----
-version: v1
-exclude:
-  global:
-    # Skip built Terraform state directories
-    - "workspaces/terraform.tfstate.d/**"
-    # Skip integration and e2e test code
-    - "tests/e2e/**"
-    # Skip provider configs and modules you don't ship
-    - "providers.tf"
-    # Exclude every directory whose name starts with a dot
-    - "**/.*"
-    # Re-include .github so it's scanned
-    - "!**/.github/**"
+# .snyk
+
+# Ignore hidden folders except .github
+ignore:
+  - '**/.*'
+  - '!**/.github/**'
+  - '**/.terraform/**'
+  - '**/*.tfstate*'
+  - '**/*.backup'
+  - '**/*.log'
+  - '**/node_modules/**'
+  - '**/vendor/**'
+
+iac:
+  terraform:
+    organization: guillermolam
+    project: terraform-aks
+    org_id: a51847c3-c681-4b76-86fd-a33cf2404649
+    org_slug: guillermolam-XPKgJcGJt7mGz4MQfeug9E
+    # Add additional settings or rules if needed
+    # rules:
+    #   - exclude: ...
+
+# Optionally, you can add policies or severity thresholds here.

@@ -1,7 +1,7 @@
 variables {
-  environment = "dev"
+  environment = "non-prod"
   location = "switzerlandnorth"
-  resource_group_name = "rg-aks-dev"
+  resource_group_name = "rg-aks-non-prod"
 }
 
 run "verify_network_configuration" {
@@ -9,7 +9,7 @@ run "verify_network_configuration" {
 
   assert {
     condition = module.network.vnet_address_space[0] == "10.0.0.0/16"
-    error_message = "VNet address space must be 10.0.0.0/16 for dev environment"
+    error_message = "VNet address space must be 10.0.0.0/16 for non-prod environment"
   }
 
   assert {
@@ -33,12 +33,12 @@ run "verify_aks_cluster_configuration" {
 
   assert {
     condition = module.aks.node_pool_vm_size == "Standard_D2s_v3"
-    error_message = "Node pool VM size must be Standard_D2s_v3 for dev environment"
+    error_message = "Node pool VM size must be Standard_D2s_v3 for non-prod environment"
   }
 
   assert {
-    condition = module.aks.node_count >= 2 && module.aks.node_count <= 3
-    error_message = "Node count must be between 2 and 3 for dev environment"
+    condition = module.aks.node_count >= 2 && module.aks.node_count <= 4
+    error_message = "Node count must be between 2 and 4 for non-prod environment to limit resources"
   }
 
   assert {
@@ -62,11 +62,65 @@ run "verify_security_configuration" {
 
   assert {
     condition = module.aks.private_cluster_enabled == false
-    error_message = "Dev cluster should not be private"
+    error_message = "Non-prod cluster should not be private"
   }
 
   assert {
     condition = module.aks.availability_zones == [1, 2, 3]
     error_message = "AKS cluster must be deployed across all availability zones"
+  }
+}
+
+run "verify_acr_access" {
+  command = plan
+
+  assert {
+    condition = module.aks.acr_access_enabled == true
+    error_message = "AKS must have access to Azure Container Registry (ACR)"
+  }
+}
+
+run "verify_nginx_ingress" {
+  command = plan
+
+  assert {
+    condition = module.aks.ingress_enabled == true
+    error_message = "AKS must have NGINX Ingress Controller configured"
+  }
+}
+
+run "verify_cert_rotation" {
+  command = plan
+
+  assert {
+    condition = module.aks.cert_manager_enabled == true
+    error_message = "AKS must have cert-manager for automated certificate rotation"
+  }
+}
+
+run "verify_cilium_configuration" {
+  command = plan
+
+  assert {
+    condition = module.aks.cilium_enabled == true
+    error_message = "AKS must have Cilium configured for network policy"
+  }
+}
+
+run "verify_opentelemetry" {
+  command = plan
+
+  assert {
+    condition = module.aks.opentelemetry_enabled == true
+    error_message = "AKS must have OpenTelemetry configured for observability"
+  }
+}
+
+run "verify_resource_limits" {
+  command = plan
+
+  assert {
+    condition = module.aks.agent_max_count <= 4
+    error_message = "Max node count must be limited to 4 for non-prod environment to conserve resources"
   }
 }

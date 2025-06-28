@@ -8,7 +8,6 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Variables for the non-prod environment
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
@@ -86,65 +85,33 @@ module "iam" {
   principal_type       = "ServicePrincipal"
 }
 
-# AKS module
-module "aks" {
-  source = "../../modules/03. aks"
+# Arc AKS module for non-prod environment
+module "arc_aks" {
+  source = "../../modules/04. arc_aks"
 
-  aks_cluster_name    = local.name
-  location            = var.location
-  resource_group_name = local.resource_group_name
-  agent_vm_size       = local.agent_vm_size
-  agent_count         = local.agent_count
-  vnet_subnet_id      = module.network.subnets[0].id
-  agent_min_count     = local.agent_min_count
-  agent_max_count     = local.agent_max_count
-  agent_max_pods      = local.agent_max_pods
-  agent_os_disk_size_gb = local.agent_os_disk_size_gb
-  agent_subnet_id     = module.network.subnets[0].id
-  kubeconfig_path     = "~/.kube/config"
-  log_analytics_workspace_id = ""
-  ingress_name        = "aks-ingress"
-  ingress_hosts       = ["aks-non-prod.example.com"]
-  tls_secret_name     = "aks-tls-secret"
-  service_name        = "aks-service"
-  acme_email          = "admin@example.com"
-  auto_scaler_profile_balance_similar_node_groups = false
-  auto_scaler_profile_empty_bulk_delete_max = 10
-  auto_scaler_profile_expander = "random"
-  auto_scaler_profile_max_graceful_termination_sec = 600
-  auto_scaler_profile_max_node_provisioning_time = "15m"
-  auto_scaler_profile_max_unready_nodes = 3
-  auto_scaler_profile_max_unready_percentage = 45
-  auto_scaler_profile_new_pod_scale_up_delay = 0
-  auto_scaler_profile_scale_down_delay_after_add = "10m"
-  auto_scaler_profile_scale_down_delay_after_delete = "20s"
-  auto_scaler_profile_scale_down_delay_after_failure = "3m"
-  auto_scaler_profile_scale_down_unneeded = true
-  auto_scaler_profile_scale_down_unready = true
-  auto_scaler_profile_scale_down_utilization_threshold = 0.5
-  auto_scaler_profile_scan_interval = "10s"
-  auto_scaler_profile_skip_nodes_with_local_storage = false
-  auto_scaler_profile_skip_nodes_with_system_pods = true
+  cluster_name                 = local.name
+  location                     = var.location
+  resource_group_name          = local.resource_group_name
+  kubernetes_version           = "1.26.0"
+  agent_public_key_certificate = "placeholder-certificate-value"
+  kube_config                  = ""
+  kube_config_context          = ""
+  tags                         = {}
+  subscription_id              = var.subscription_id
+  client_id                    = var.client_id
+  client_secret                = var.client_secret
+  tenant_id                    = var.tenant_id
 
-  depends_on = [
-    module.network,
-    module.iam
-  ]
+  # Note: depends_on removed due to legacy module constraints
 }
 
 # Outputs
-output "aks_cluster_name" {
-  description = "The name of the AKS cluster"
-  value       = module.aks.aks_cluster_name
+output "arc_cluster_name" {
+  description = "Name of the Arc-enabled Kubernetes cluster"
+  value       = module.arc_aks.arc_cluster_name
 }
 
-output "kube_config" {
-  description = "Kubeconfig for the AKS cluster"
-  value       = module.aks.kube_config_raw
-  sensitive   = true
-}
-
-output "aks_fqdn" {
-  description = "FQDN of the AKS cluster"
-  value       = module.aks.fqdn
+output "arc_provisioned_id" {
+  description = "ID of the provisioned Arc Kubernetes cluster resource"
+  value       = module.arc_aks.arc_provisioned_id
 }

@@ -1,5 +1,9 @@
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
 }
 
 resource "azurerm_arc_kubernetes_cluster" "arc" {
@@ -19,7 +23,7 @@ resource "azurerm_arc_kubernetes_provisioned_cluster" "arcprov" {
   name                = azurerm_arc_kubernetes_cluster.arc.name
   location            = azurerm_arc_kubernetes_cluster.arc.location
   resource_group_name = azurerm_arc_kubernetes_cluster.arc.resource_group_name
-  kubernetes_version  = var.kubernetes_version
+  # kubernetes_version is automatically determined
 
   identity {
     type = "SystemAssigned"

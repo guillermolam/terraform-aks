@@ -1,40 +1,11 @@
-variable "cluster_name" {
+variable "kube_config_path" {
   type        = string
-  description = "Name of your Arc-enabled cluster"
-}
-
-variable "location" {
-  type        = string
-  description = "Azure region to place the Arc resource metadata (metadata-only)"
-}
-
-variable "resource_group_name" {
-  type        = string
-  description = "Azure RG housing the Arc resource"
-}
-
-variable "kubernetes_version" {
-  type        = string
-  description = "Kubernetes version string matching your on-prem cluster"
-}
-
-variable "agent_public_key_certificate" {
-  type        = string
-  description = "Public key certificate for the cluster agent"
-}
-
-variable "kube_config" {
-  type        = string
-  description = "Full kubeconfig YAML of the existing on-prem cluster"
+  description = "Path to the kubeconfig file for the on-premises Kubernetes cluster"
+  default     = "~/.kube/config"
 }
 
 variable "kube_config_context" {
   type        = string
   description = "The context name from the kubeconfig to use"
-}
-
-variable "tags" {
-  type        = map(string)
-  description = "Tags to apply to Arc resources"
-  default     = {}
+  default     = "rancher-desktop"
 }

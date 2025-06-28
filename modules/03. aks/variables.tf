@@ -190,20 +190,7 @@ variable "msi_auth_for_monitoring_enabled" {
   default     = true
 }
 
-// Tags
-variable "tags" {
-  description = "Tags to apply to the AKS cluster"
-  type        = map(string)
-  default     = {}
-}
-
 // --- Ingress & cert-manager Variables ---
-
-// Kubeconfig for providers
-variable "kubeconfig_path" {
-  description = "Path to the kubeconfig file to access the AKS cluster"
-  type        = string
-}
 
 // cert-manager settings
 variable "cert_manager_namespace" {
@@ -220,23 +207,6 @@ variable "cert_manager_chart_version" {
   description = "Version of the cert-manager Helm chart"
   type        = string
   default     = "v1.12.0"
-}
-
-// NGINX Ingress settings
-variable "ingress_namespace" {
-  description = "Namespace for NGINX Ingress Controller"
-  type        = string
-  default     = "ingress-nginx"
-}
-variable "ingress_release_name" {
-  description = "Helm release name for NGINX Ingress Controller"
-  type        = string
-  default     = "ingress-nginx"
-}
-variable "ingress_chart_version" {
-  description = "Version of the ingress-nginx Helm chart"
-  type        = string
-  default     = "4.8.0"
 }
 
 // ACME / Let's Encrypt ClusterIssuer settings

@@ -1,19 +1,19 @@
 output "resource_group_id" {
-  description = "The ID of the resource group"
-  value       = azurerm_resource_group.main.id
+  description = "The ID of the resource group (if created in this module)"
+  value       = azurerm_resource_group.this.id
 }
 
 output "vnet_id" {
   description = "The ID of the virtual network"
-  value       = azurerm_virtual_network.main.id
+  value       = azurerm_virtual_network.this.id
 }
 
-output "subnet_ids" {
-  description = "List of all subnet IDs (public + private)"
-  value       = azurerm_subnet.main[*].id
+output "subnets" {
+  description = "List of all subnet objects"
+  value       = azurerm_subnet.this
 }
 
-output "nsg_id" {
-  description = "The ID of the network security group"
-  value       = azurerm_network_security_group.main.id
+output "nsg_ids" {
+  description = "Map of network security group IDs by subnet name"
+  value       = azurerm_network_security_group.nsg
 }
