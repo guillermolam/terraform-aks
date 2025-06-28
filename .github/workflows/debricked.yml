@@ -27,6 +27,8 @@ name: Debricked Scan
 
 on:
   push:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight UTC
 
 permissions:
   contents: read
