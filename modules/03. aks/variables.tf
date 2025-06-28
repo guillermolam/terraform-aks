@@ -1,58 +1,67 @@
-// variables.tf
 
-// --- Kubernetes Cluster (AKS) Variables ---
 variable "aks_cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
 }
 variable "location" {
-  description = "Azure region for AKS"
+  description = "Azure region for AKS deployment"
   type        = string
 }
+
 variable "resource_group_name" {
-  description = "Resource Group name for AKS"
+  description = "Name of the resource group"
   type        = string
 }
 
-// Identity & Security
-variable "control_plane_uami_id" {
-  description = "User-assigned managed identity ID for control plane"
-  type        = string
-}
-variable "rbac_aad_tenant_id" {
-  description = "Azure AD Tenant ID for RBAC"
-  type        = string
-}
-variable "rbac_aad_admin_group_object_ids" {
-  description = "List of Azure AD group object IDs for cluster-admins"
-  type        = list(string)
-}
-
-// Networking (Overlay + dual-stack)
-variable "pod_cidrs" {
-  description = "List of Pod CIDR blocks for overlay network"
-  type        = list(string)
-}
-variable "service_cidrs" {
-  description = "List of Service CIDR blocks"
-  type        = list(string)
-}
-variable "dns_service_ip" {
-  description = "IP address for DNS service inside the cluster"
-  type        = string
-}
-variable "nat_gateway_profile" {
-  description = "Settings for NAT Gateway profile"
-  type = object({
-    idle_timeout_in_minutes   = number
-    managed_outbound_ip_count = number
-  })
-}
-
-// Default Node Pool Settings
 variable "agent_vm_size" {
-  description = "VM size for default node pool"
+  description = "VM size for AKS agent pool"
   type        = string
+}
+
+variable "agent_count" {
+  description = "Number of nodes in the AKS agent pool"
+  type        = number
+}
+
+variable "vnet_subnet_id" {
+  description = "ID of the subnet for AKS node pool"
+  type        = string
+}
+
+variable "admin_group_object_ids" {
+  description = "Object IDs of admin groups for AKS RBAC"
+  type        = list(string)
+  default     = []
+}
+
+variable "tags" {
+  description = "Tags to apply to AKS resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "kubeconfig_path" {
+  description = "Path to save the kubeconfig file"
+  type        = string
+  default     = "~/.kube/config"
+}
+
+variable "ingress_namespace" {
+  description = "Namespace for NGINX Ingress Controller"
+  type        = string
+  default     = "ingress-nginx"
+}
+
+variable "ingress_release_name" {
+  description = "Release name for NGINX Ingress Controller Helm chart"
+  type        = string
+  default     = "ingress-nginx"
+}
+
+variable "ingress_chart_version" {
+  description = "Version of NGINX Ingress Controller Helm chart"
+  type        = string
+  default     = "4.5.2"
 }
 variable "agent_min_count" {
   description = "Minimum nodes in the default node pool"

@@ -56,7 +56,7 @@ variable "subnets" {
     List of CIDR blocks for subnets in the virtual network.
     Expect 4 entries: 2 public and 2 private subnets across 2 AZs.
   EOT
-  type    = list(string)
+  type        = list(string)
 }
 
 variable "dns_servers" {
@@ -89,30 +89,30 @@ variable "enable_ddos_protection" {
 
 variable "bgp_peering_configs" {
   description = "Configurations for BGP peering"
-  type        = list(object({
+  type = list(object({
     asn          = number
     peering_name = string
     peer_ip      = string
     peer_asn     = number
   }))
-  default     = []
+  default = []
 }
 
 variable "subnet_configs" {
-  description = "Configurations for subnets in the virtual network"
-  type        = list(object({
+  description = "Configurations for subnets in the virtual network. Include a GatewaySubnet for VPN Gateway if needed."
+  type = list(object({
     name                        = string
     prefix                      = string
     service_endpoints           = optional(list(string), [])
     service_endpoint_policy_ids = optional(list(string), [])
     default_outbound_access     = optional(bool, true)
-    delegations                 = optional(list(object({
-      name               = string
+    delegations = optional(list(object({
+      name = string
       service_delegations = list(object({
         name    = string
         actions = list(string)
       }))
     })), [])
-    nsg_id                      = optional(string)
+    nsg_id = optional(string)
   }))
 }

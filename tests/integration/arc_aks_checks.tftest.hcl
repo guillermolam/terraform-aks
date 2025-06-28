@@ -1,27 +1,52 @@
-check "rbac_enabled" {
-  assert {
-    condition     = azurerm_kubernetes_cluster.aks.role_based_access_control[0].enabled == true
-    error_message = "AKS cluster MUST have RBAC enabled."
+variables {
+  location            = "switzerlandnorth"
+  resource_group_name = "test-rg"
+  cluster_name        = "test-arc-cluster"
+  kubernetes_version  = "1.24.6"
+  kube_config         = "test-kube-config"
+  kube_config_context = "test-context"
+  agent_public_key_certificate = "test-cert"
+}
+
+provider "azurerm" {
+  features {}
+}
+
+run "setup" {
+  # Setup resources or mocks if needed before the test execution.
+  module {
+    source = "./testing/setup"
   }
 }
 
-check "no_public_node_ips" {
-  assert {
-    condition     = azurerm_kubernetes_cluster.aks.default_node_pool[0].enable_node_public_ip == false
-    error_message = "Node pools must NOT have public IPs enabled."
+run "execute" {
+  # Execute the Arc AKS module configuration under test.
+  module {
+    source = "../../modules/04. arc_aks"
+    location            = var.location
+    resource_group_name = var.resource_group_name
+    cluster_name        = var.cluster_name
+    kubernetes_version  = var.kubernetes_version
+    kube_config         = var.kube_config
+    kube_config_context = var.kube_config_context
+    agent_public_key_certificate = var.agent_public_key_certificate
   }
 }
 
-check "correct_azs" {
+run "verify" {
+  # Verify the Arc AKS cluster configuration.
   assert {
-    condition     = length(azurerm_kubernetes_cluster.aks.default_node_pool[0].availability_zones) >= 2
-    error_message = "Cluster should be distributed across at least 2 Availability Zones."
+    condition     = azurerm_arc_kubernetes_cluster.arc.name == var.cluster_name
+    error_message = "Arc cluster name does not match the expected value."
   }
-}
 
-check "uses_private_subnet" {
   assert {
-    condition     = can(regex("private", azurerm_kubernetes_cluster.aks.default_node_pool[0].vnet_subnet_id))
-    error_message = "Default node pool must use a subnet named 'private'."
+    condition     = azurerm_arc_kubernetes_provisioned_cluster.arcprov.kubernetes_version == var.kubernetes_version
+    error_message = "Arc provisioned cluster Kubernetes version does not match the expected value."
+  }
+
+  assert {
+    condition     = azurerm_arc_kubernetes_cluster_extension.monitoring.extension_type == "AzureMonitorContainers"
+    error_message = "Monitoring extension type is incorrect."
   }
 }

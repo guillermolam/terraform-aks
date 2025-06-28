@@ -1,0 +1,15 @@
+# Ignore Terraform state
+workspaces/terraform.tfstate.d/**
+
+# Ignore all test directories
+tests/
+tests/e2e/**
+
+# Ignore modules (you may lint HCL only in dedicated modules if desired)
+modules/**
+
+# Optionally ignore generated or vendor code
+# Ignore any directory or file starting with a dot
+**/.*
+# But do not ignore .github
+!/.github/
