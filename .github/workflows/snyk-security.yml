@@ -23,7 +23,10 @@ jobs:
       - uses: actions/setup-go@v1
         with:
           go-version: "1.13"
-      - name: Snyk test
-        run: snyk test
+      - name: Snyk IaC test
+        run: | 
+          terraform plan -out=tfplan
+          terraform show --json tfplan > tfplan.json
+          snyk iac test tfplan.json --experimental 
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
