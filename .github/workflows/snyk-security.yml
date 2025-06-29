@@ -28,7 +28,7 @@ jobs:
         run: |
           terraform fmt -check
           terraform validate
-          terraform init
+          terraform init -input=false
           terraform plan -out=tfplan
           terraform show --json tfplan > tfplan.json
           snyk iac test tfplan.json --experimental 
