@@ -26,6 +26,8 @@ jobs:
           go-version: "1.13"
       - name: Snyk IaC test
         run: |
+          terraform fmt -check
+          terraform validate
           terraform init
           terraform plan -out=tfplan
           terraform show --json tfplan > tfplan.json
