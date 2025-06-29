@@ -1,8 +1,13 @@
 # Install cert-manager
 provider "helm" {
-  kubernetes = {
-    config_path = var.kubeconfig_path
+
+  alias       = "cert_manager"
+  helm_driver = "kubeconfig"
+  kubernetes {
+    config_path    = var.kubeconfig_path
+    config_context = var.kubeconfig_context
   }
+
 }
 
 resource "kubernetes_namespace" "cert_manager" {
@@ -21,12 +26,10 @@ resource "helm_release" "cert_manager" {
   create_namespace = false
   depends_on       = [kubernetes_namespace.cert_manager]
 
-  set = [
-    {
-      name  = "installCRDs"
-      value = "true"
-    }
-  ]
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
 }
 
 # Install NGINX Ingress Controller
@@ -46,86 +49,88 @@ resource "helm_release" "nginx_ingress" {
   create_namespace = false
   depends_on       = [kubernetes_namespace.ingress_nginx]
 
-  set = [
-    {
-      name  = "controller.publishService.enabled"
-      value = "true"
-    },
-    {
-      name  = "controller.service.type"
-      value = "LoadBalancer"
-    },
-    {
-      name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-enable-tcp-reset"
-      value = "true"
-    }
-  ]
+  set {
+    name  = "controller.scope.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "controller.scope.namespace"
+    value = var.ingress_namespace
+  }
+  set {
+    name  = "controller.admissionWebhooks.enabled"
+    value = "true"
+  }
+
 }
 
 # ClusterIssuer for Let's Encrypt
 # Terraform interpolates HCL expressions inside heredoc manifests automatically at plan/apply time
 resource "kubernetes_manifest" "letsencrypt_cluster_issuer" {
-  manifest = yamlencode({
+  count = var.kube_config != "" ? 1 : 0
+  manifest = {
     apiVersion = "cert-manager.io/v1"
     kind       = "ClusterIssuer"
     metadata = {
-      name = var.cluster_issuer_name
+      name = "letsencrypt-prod"
     }
     spec = {
       acme = {
-        server = var.acme_server
-        email  = var.acme_email
+        server = "https://acme-v02.api.letsencrypt.org/directory"
+        email  = "user@example.com"
         privateKeySecretRef = {
-          name = var.cluster_issuer_secret_name
+          name = "letsencrypt-prod-key"
         }
         solvers = [
           {
             http01 = {
               ingress = {
-                class = var.ingress_class
+                class = "nginx"
               }
             }
           }
         ]
       }
     }
-  })
+  }
 }
 
 # Ingress with TLS and automated cert rotation
 # Terraform interpolates HCL expressions inside heredoc manifests automatically at plan/apply time
 resource "kubernetes_manifest" "app_ingress" {
-  manifest = yamlencode({
+  count = var.kube_config != "" ? 1 : 0
+  manifest = {
     apiVersion = "networking.k8s.io/v1"
     kind       = "Ingress"
     metadata = {
-      name        = var.ingress_name
-      namespace   = var.ingress_namespace
+      name      = "app-ingress"
+      namespace = "ingress-nginx"
       annotations = {
-        "kubernetes.io/ingress.class" = var.ingress_class
-        "cert-manager.io/cluster-issuer" = var.cluster_issuer_name
+        "kubernetes.io/ingress.class"    = "nginx"
+        "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
       }
     }
     spec = {
       tls = [
         {
-          hosts       = var.ingress_hosts
-          secretName  = var.tls_secret_name
+          hosts      = ["example.com"]
+          secretName = "app-tls"
         }
       ]
       rules = [
-        for h in var.ingress_hosts : {
-          host = h
+        {
+          host = "example.com"
           http = {
             paths = [
               {
                 path     = "/"
                 pathType = "Prefix"
-                backend  = {
+                backend = {
                   service = {
-                    name = var.service_name
+                    name = "app-service"
                     port = {
-                      number = var.service_port
+                      number = 80
                     }
                   }
                 }
@@ -135,6 +140,6 @@ resource "kubernetes_manifest" "app_ingress" {
         }
       ]
     }
-  })
+  }
   depends_on = [helm_release.cert_manager, helm_release.nginx_ingress]
 }

@@ -5,9 +5,16 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  kubernetes = {
+
+  kubernetes {
     config_path    = var.kube_config_path
     config_context = var.kube_config_context
+  }
+
+  registry {
+    url      = "oci://localhost:5000"
+    username = "admin"
+    password = "admin"
   }
 }
 
@@ -19,35 +26,35 @@ resource "kubernetes_namespace" "test_namespace" {
 }
 
 resource "helm_release" "nginx_ingress" {
-  name       = "ingress-nginx"
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  version    = "4.11.3"
-  namespace  = "ingress-nginx"
+  name             = "ingress-nginx"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  version          = "4.11.3"
+  namespace        = "ingress-nginx"
   create_namespace = true
 
-  set = [
-    {
-      name  = "controller.publishService.enabled"
-      value = "true"
-    }
-  ]
+  set {
+    name  = "controller.publishService.enabled"
+    value = "true"
+  }
+  set {
+    name  = "controller.service.type"
+    value = "NodePort"
+  }
 }
 
 resource "helm_release" "cert_manager" {
-  name       = "cert-manager"
-  repository = "https://charts.jetstack.io"
-  chart      = "cert-manager"
-  version    = "v1.12.0"
-  namespace  = "cert-manager"
+  name             = "cert-manager"
+  repository       = "https://charts.jetstack.io"
+  chart            = "cert-manager"
+  version          = "v1.12.0"
+  namespace        = "cert-manager"
   create_namespace = true
 
-  set = [
-    {
-      name  = "installCRDs"
-      value = "true"
-    }
-  ]
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
 }
 
 output "namespace_created" {
