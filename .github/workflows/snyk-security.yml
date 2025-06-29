@@ -27,8 +27,8 @@ jobs:
       - name: Snyk IaC test
         run: |
           terraform fmt -check
-          terraform validate
           terraform init -input=false
+          terraform validate
           terraform plan -out=tfplan
           terraform show --json tfplan > tfplan.json
           snyk iac test tfplan.json --experimental 
