@@ -2,6 +2,7 @@ variables {
   environment = "dev"
   location = "switzerlandnorth"
   resource_group_name = "rg-aks-dev"
+  storage_account_name = "tfstateguillamk8s"
 }
 
 run "verify_network_configuration" {

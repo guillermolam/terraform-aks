@@ -1,3 +1,12 @@
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "tfstateguillamk8s"
+    container_name       = "tfstate"
+    key                  = "dev.terraform.tfstate"
+  }
+}
+
 # Configuration for on-premises Kubernetes cluster with Rancher Desktop
 provider "kubernetes" {
   config_path    = var.kube_config_path

@@ -1,4 +1,12 @@
 # Production environment AKS cluster configuration
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "tfstateguillamk8s"
+    container_name       = "tfstate"
+    key                  = "prod.terraform.tfstate"
+  }
+}
 
 provider "azurerm" {
   features {}
@@ -106,7 +114,7 @@ module "aks" {
   ingress_hosts       = ["aks-prod.example.com"]
   tls_secret_name     = "aks-tls-secret"
   service_name        = "aks-service"
-  acme_email          = "admin@example.com"
+  acme_email          = "guillermolam.m@gmail.com"
   auto_scaler_profile_balance_similar_node_groups = false
   auto_scaler_profile_empty_bulk_delete_max = 10
   auto_scaler_profile_expander = "random"

@@ -2,6 +2,7 @@ variables {
   environment = "non-prod"
   location = "switzerlandnorth"
   resource_group_name = "rg-aks-non-prod"
+  storage_account_name = "tfstateaccount"
 }
 
 run "verify_network_configuration" {

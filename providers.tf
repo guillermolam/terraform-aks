@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.0"
+      version = "~> 4.34.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -13,8 +13,8 @@ terraform {
       version = "~> 2.0"
     }
     ngrok = {
-      source  = "ngrok/ngrok"
-      version = "0.11.0"
+      source = "ngrok/ngrok"
+      version = "~> 0.4.0"
     }
   }
 }

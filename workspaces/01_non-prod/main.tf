@@ -1,4 +1,12 @@
 # Non-prod environment AKS cluster configuration
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "tfstateguillamk8s"
+    container_name       = "tfstate"
+    key                  = "non-prod.terraform.tfstate"
+  }
+}
 
 provider "azurerm" {
   features {}
