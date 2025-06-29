@@ -1,13 +1,9 @@
 # Install cert-manager
 provider "helm" {
-
-  alias       = "cert_manager"
-  helm_driver = "kubeconfig"
-  kubernetes {
-    config_path    = var.kubeconfig_path
-    config_context = var.kubeconfig_context
+  kubernetes = {
+    config_path = var.kubeconfig_path
   }
-
+  helm_driver = "kubeconfig"
 }
 
 resource "kubernetes_namespace" "cert_manager" {
@@ -26,7 +22,7 @@ resource "helm_release" "cert_manager" {
   create_namespace = false
   depends_on       = [kubernetes_namespace.cert_manager]
 
-  set {
+  set = {
     name  = "installCRDs"
     value = "true"
   }
@@ -49,16 +45,16 @@ resource "helm_release" "nginx_ingress" {
   create_namespace = false
   depends_on       = [kubernetes_namespace.ingress_nginx]
 
-  set {
+  set = {
     name  = "controller.scope.enabled"
     value = "true"
   }
 
-  set {
+  set = {
     name  = "controller.scope.namespace"
     value = var.ingress_namespace
   }
-  set {
+  set = {
     name  = "controller.admissionWebhooks.enabled"
     value = "true"
   }

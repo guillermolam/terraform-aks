@@ -18,11 +18,10 @@ resource "helm_release" "cert_manager" {
   create_namespace = false
   depends_on       = [kubernetes_namespace.cert_manager]
 
-  set = [
-    {
-      name  = "installCRDs"
-      value = "true"
-    }
+  values = [
+    yamlencode({
+      installCRDs = true
+    })
   ]
 }
 
@@ -43,20 +42,22 @@ resource "helm_release" "nginx_ingress" {
   create_namespace = false
   depends_on       = [kubernetes_namespace.ingress_nginx]
 
-  set = [
-    {
-      name  = "controller.publishService.enabled"
-      value = "true"
-    },
-    {
-      name  = "controller.service.type"
-      value = "LoadBalancer"
-    },
-    {
-      name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-enable-tcp-reset"
-      value = "true"
-    }
+  values = [
+    yamlencode({
+      controller = {
+        publishService = {
+          enabled = true
+        }
+        service = {
+          type = "LoadBalancer"
+          annotations = {
+            "service.beta.kubernetes.io/azure-load-balancer-enable-tcp-reset" = "true"
+          }
+        }
+      }
+    })
   ]
+
 }
 
 # ClusterIssuer for Let's Encrypt

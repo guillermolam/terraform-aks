@@ -54,7 +54,7 @@ terraform init -upgrade -reconfigure ## reconfigure backend and upgrade modules/
 terraform init -reconfigure -no-color ## reinitialize backend quietly without color output
 ```
 
-```
+```bash
 terraform test ## execute all test files in the default “tests” directory :contentReference[oaicite:0]{index=0}
 terraform test -filter=tests/validations.tftest.hcl ## run only the specified test file :contentReference[oaicite:1]{index=1}
 terraform test -filter='tests/*.tftest.hcl' ## run all tests matching the wildcard pattern :contentReference[oaicite:2]{index=2}
@@ -68,7 +68,7 @@ terraform test -filter=tests/outputs.tftest.hcl -json ## run a specific test fil
 terraform test -filter=tests/outputs.tftest.hcl -junit-xml=./outputs.xml ## run and export JUnit XML report for the “outputs” tests :contentReference[oaicite:10]{index=10}
 terraform test -filter=tests/outputs.tftest.hcl -verbose ## run a specific test with detailed output logs :contentReference[oaicite:11]{index=11}
 terraform test -test-directory=specs -parallelism=3 ## use “specs” as test directory with up to 3 concurrent operations :contentReference[oaicite:12]{index=12}
-terraform test -test-directory=specs -json ## load tests from “specs” and output JSON :contentReference[oaicite:13]{index=13}
+terraform test -test-directory=tests/integration -json ## load tests from “specs” and output JSON :contentReference[oaicite:13]{index=13}
 terraform test -test-directory=specs -verbose ## load tests from “specs” with verbose run block output :contentReference[oaicite:14]{index=14}
 terraform test -cloud-run=registry.example.com/org/module -json ## remote execution with JSON-formatted results :contentReference[oaicite:15]{index=15}
 terraform test -cloud-run=registry.example.com/org/module -junit-xml=remote-report.xml ## remote tests with JUnit XML report :contentReference[oaicite:16]{index=16}
@@ -172,4 +172,59 @@ terraform apply -backup=backup.tfstate ## specify the path for the state backup 
 terraform apply -json ## output the apply result in JSON for external tooling
 terraform apply -replace=module.foo.aws_instance.bar ## force the replacement of a specific resource
 terraform apply -refresh-only -auto-approve ## non-interactive state-only refresh (alias for deprecated `terraform refresh`) :contentReference[oaicite:1]{index=1}
+```
+
+```bash
+terraform validate ## validate the configuration for syntax and internal consistency
+terraform validate -json ## output validation results in JSON format for tooling
+terraform fmt ## rewrite configurations to canonical format
+terraform fmt -recursive ## format all .tf files in subdirectories recursively
+terraform fmt -check ## detect unformatted files without making changes
+terraform fmt -diff ## show diffs of formatting changes without rewriting files
+terraform fmt -list="*.tf" ## list files that would be formatted without changing them
+terraform version ## display the Terraform CLI version
+terraform version -json ## output version information in JSON format
+terraform workspace list ## list all existing workspaces
+terraform workspace new dev ## create a new workspace named “dev”
+terraform workspace select dev ## switch to the “dev” workspace
+terraform workspace show ## display the name of the current workspace
+terraform workspace delete dev ## delete the “dev” workspace
+terraform workspace rename dev prod ## rename workspace “dev” to “prod”
+terraform import aws_instance.web i-12345678 ## import an existing AWS EC2 instance into state
+terraform import -lock=false aws_instance.web i-12345678 ## import without acquiring a state lock
+terraform import -config=prod.conf aws_db_instance.db db-123 ## import using a specific config file
+terraform output ## read an output variable from state
+terraform output -json ## output all outputs in JSON format
+terraform output web_ip ## display the “web_ip” output value
+terraform refresh ## update state file with real-world resource attributes
+terraform refresh -target=aws_instance.web ## refresh state for a specific resource only
+terraform show ## show human-readable state or plan
+terraform show -json ## output state or plan in JSON format
+terraform show plan.tfplan ## display the contents of a saved plan file
+terraform graph ## generate a visual graph of resource relationships (DOT format)
+terraform graph -module-depth=1 ## limit graph to top-level modules only
+terraform graph -type=plan ## graph only resources in the planned changes
+terraform graph -draw-cycles ## include cycle edges in the graph output
+terraform taint aws_instance.web ## mark a resource for recreation on next apply
+terraform taint -allow-missing aws_instance.web ## taint even if resource is missing from state
+terraform untaint aws_instance.web ## remove the “tainted” mark from a resource
+terraform force-unlock 1234abcd ## manually unlock state if a lock remains after failure
+terraform destroy ## destroy all managed infrastructure
+terraform destroy -auto-approve ## destroy without confirmation prompt
+terraform destroy -target=aws_instance.web ## destroy only the specified resource
+terraform console ## open an interactive console to evaluate Terraform expressions
+terraform console -no-color ## launch console without ANSI color codes
+terraform login ## authenticate to Terraform Cloud or Enterprise
+terraform logout ## remove stored credentials for Terraform Cloud
+terraform providers ## list provider dependencies in the configuration
+terraform providers mirror ./mirror-dir ## download all providers into a local directory
+terraform providers schema aws ## show the resource & data source schema for the “aws” provider
+terraform providers schema -json aws ## output the AWS provider schema in JSON
+terraform fmt -write=false ## check formatting without writing any changes
+terraform fmt -write=true ## explicitly write formatting changes (default behavior)
+terraform fmt -pattern="*.tf" ## format only files matching the given glob pattern
+terraform workspace list -no-color ## list workspaces without ANSI color codes
+terraform login --token="…" ## non-interactive login supplying an API token
+
+``
 ```

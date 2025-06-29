@@ -5,16 +5,9 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-
   kubernetes {
     config_path    = var.kube_config_path
     config_context = var.kube_config_context
-  }
-
-  registry {
-    url      = "oci://localhost:5000"
-    username = "admin"
-    password = "admin"
   }
 }
 
@@ -33,14 +26,18 @@ resource "helm_release" "nginx_ingress" {
   namespace        = "ingress-nginx"
   create_namespace = true
 
-  set {
-    name  = "controller.publishService.enabled"
-    value = "true"
-  }
-  set {
-    name  = "controller.service.type"
-    value = "NodePort"
-  }
+  values = [
+    yamlencode({
+      controller = {
+        publishService = {
+          enabled = true
+        }
+        service = {
+          type = "NodePort"
+        }
+      }
+    })
+  ]
 }
 
 resource "helm_release" "cert_manager" {
@@ -51,10 +48,11 @@ resource "helm_release" "cert_manager" {
   namespace        = "cert-manager"
   create_namespace = true
 
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
+  values = [
+    yamlencode({
+      installCRDs = true
+    })
+  ]
 }
 
 output "namespace_created" {
@@ -70,4 +68,12 @@ output "nginx_ingress_status" {
 output "cert_manager_status" {
   description = "Status of Cert-Manager deployment"
   value       = helm_release.cert_manager.status
+}
+
+module "ngrok" {
+  source = "../../modules/06. ngrok"
+
+  ngrok_api_key       = var.ngrok_api_key
+  tls_certificate_pem = var.tls_certificate_pem
+  tls_private_key_pem = var.tls_private_key_pem
 }
